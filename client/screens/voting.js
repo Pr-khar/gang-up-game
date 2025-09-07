@@ -25,9 +25,28 @@ export function renderVoting({ state, elements, socket, selfId, showScreen, play
 
     elements.voteABtn.textContent = `Vote ${aName}`;
     elements.voteBBtn.textContent = `Vote ${bName}`;
+    // Reset selection visuals and enable by default
     elements.voteABtn.disabled = false;
     elements.voteBBtn.disabled = false;
     elements.becauseInput.disabled = false;
+    if (elements.voteABtn && elements.voteBBtn) {
+      elements.voteABtn.classList.remove('vote-selected');
+      elements.voteBBtn.classList.remove('vote-selected');
+    }
+
+    // If the current user is featured in this matchup, disable voting/commenting and show message
+    const isFeatured = selfId === a || selfId === b;
+    if (isFeatured) {
+      elements.voteABtn.disabled = true;
+      elements.voteBBtn.disabled = true;
+      elements.becauseInput.disabled = true;
+      if (elements.voteStatusEl) {
+        elements.voteStatusEl.textContent = "You&apos;re featured in this matchup. You can&apos;t vote.";
+      }
+    } else if (elements.voteStatusEl) {
+      // Clear any prior status when not featured (e.g., moving to a new round)
+      elements.voteStatusEl.textContent = '';
+    }
 
     if (v.tally) {
       const aCount = v.tally[a] || 0;
@@ -35,6 +54,23 @@ export function renderVoting({ state, elements, socket, selfId, showScreen, play
       elements.voteTallyEl.textContent = `Tally: ${aName} ${aCount} — ${bName} ${bCount} (${v.votesReceived || 0}/${v.votesTotal || 0} votes)`;
     } else {
       elements.voteTallyEl.textContent = '';
+    }
+
+    // Restore selection UI if user already voted this round
+    const roomCode = room?.code || 'room';
+    const storageKey = `vote_${roomCode}_${v.index || 0}`;
+    let priorPick = null;
+    try { priorPick = localStorage.getItem(storageKey); } catch {}
+    if (priorPick && (priorPick === String(a) || priorPick === String(b))) {
+      if (String(priorPick) === String(a)) elements.voteABtn.classList.add('vote-selected');
+      if (String(priorPick) === String(b)) elements.voteBBtn.classList.add('vote-selected');
+      elements.voteABtn.disabled = true;
+      elements.voteBBtn.disabled = true;
+      elements.becauseInput.disabled = true;
+      if (elements.voteStatusEl) {
+        const pickedName = String(priorPick) === String(a) ? aName : bName;
+        elements.voteStatusEl.textContent = `You voted for ${pickedName}.`;
+      }
     }
   } else {
     elements.matchupEl.textContent = 'No matchup available';

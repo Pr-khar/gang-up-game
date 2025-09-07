@@ -216,9 +216,22 @@ if (elements.gameModeSelect) {
 
 function sendVote(pickId) {
   const because = elements.becauseInput.value.trim();
+  const roundIndex = state?.room?.draft?.voting?.index ?? 0;
+  const current = state?.room?.draft?.voting?.current;
+  const roomCode = state?.room?.code || 'room';
+  const storageKey = `vote_${roomCode}_${roundIndex}`;
   socket.emit('voting:vote', { pick: pickId, because }, (res) => {
     if (!res?.ok) return;
-    elements.voteStatusEl.textContent = `You voted for ${playerNameById(pickId)}`;
+    // Persist selection locally for this round
+    try { localStorage.setItem(storageKey, String(pickId)); } catch {}
+    // Visually mark selected choice
+    if (elements.voteABtn && elements.voteBBtn) {
+      elements.voteABtn.classList.remove('vote-selected');
+      elements.voteBBtn.classList.remove('vote-selected');
+      if (current && current[0] === pickId) elements.voteABtn.classList.add('vote-selected');
+      if (current && current[1] === pickId) elements.voteBBtn.classList.add('vote-selected');
+    }
+    elements.voteStatusEl.textContent = `You voted for ${playerNameById(pickId)}.`;
     elements.voteABtn.disabled = true;
     elements.voteBBtn.disabled = true;
     elements.becauseInput.disabled = true;

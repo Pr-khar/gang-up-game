@@ -6,6 +6,7 @@ input, button { font-size: 16px; padding: 8px 12px; }
 input { border: 1px solid #d1d5db; border-radius: 8px; }
 button { border: 1px solid #111827; border-radius: 8px; background: #111827; color: white; cursor: pointer; }
 button.secondary { background: white; color: #111827; }
+.vote-selected { border-color: #10b981 !important; background: #ecfdf5 !important; color: #065f46 !important; font-weight: 700; }
 .muted { color: #6b7280; font-size: 14px; }
 ul { padding-left: 20px; }
 .hidden { display: none; }
