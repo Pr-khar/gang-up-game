@@ -3,6 +3,7 @@ import http from 'http';
 import { Server } from 'socket.io';
 import { customAlphabet } from 'nanoid';
 import { QUESTIONS } from './questions.js';
+import { computeScoresFromRoom } from './scoring.js';
 import { computePlannedRounds, generateMatchupSchedule, uniquePairKey } from './helpers/schedule.js';
 
 const app = express();
@@ -131,7 +132,8 @@ function getPublicRoomState(room) {
 			mode: room.game?.mode || 'standard',
 			rounds: computePlannedRounds(room.game?.mode || 'standard', room.players.size)
 		},
-		draft: getDraftPublicState(room)
+		draft: getDraftPublicState(room),
+		results: room.results || null
 	};
 }
 
@@ -272,7 +274,7 @@ io.on('connection', (socket) => {
 		callback?.({ ok: true });
 	});
 
-	// End draft and move to voting (host only)
+	// End draft and move to reveal screen (host only)
 	socket.on('draft:end', async (callback) => {
 		if (!joinedRoomCode) return callback?.({ ok: false, error: 'NOT_IN_ROOM' });
 		const room = rooms.get(joinedRoomCode);
@@ -287,6 +289,22 @@ io.on('connection', (socket) => {
 			return { ...m, promptTemplate: template };
 		});
 		room.schedule = schedule;
+		room.draft.voting = null;
+		room.draft.phase = 'reveal';
+
+		io.to(joinedRoomCode).emit('room:state', getPublicRoomState(room));
+		io.to(joinedRoomCode).emit('draft:state', getDraftPublicState(room));
+		callback?.({ ok: true });
+	});
+
+	// From reveal to voting (host only)
+	socket.on('reveal:continue', async (callback) => {
+		if (!joinedRoomCode) return callback?.({ ok: false, error: 'NOT_IN_ROOM' });
+		const room = rooms.get(joinedRoomCode);
+		if (!room) return callback?.({ ok: false, error: 'ROOM_NOT_FOUND' });
+		if (room.hostId !== socket.id) return callback?.({ ok: false, error: 'NOT_HOST' });
+		if (room.draft.phase !== 'reveal') return callback?.({ ok: false, error: 'NOT_IN_REVEAL' });
+
 		room.draft.voting = { currentRound: 0, votes: {}, voteComments: {} };
 		room.draft.phase = 'voting';
 
@@ -309,7 +327,15 @@ io.on('connection', (socket) => {
 		if (v.currentRound < total - 1) {
 			v.currentRound += 1;
 		} else {
+			// Final round completed → compute and store results, move to results phase
+			try {
+				const { personalTotals, teamTotals } = computeScoresFromRoom(room);
+				room.results = { personalTotals, teamTotals };
+			} catch (e) {
+				room.results = { personalTotals: {}, teamTotals: {} };
+			}
 			room.draft.phase = 'results';
+			io.to(joinedRoomCode).emit('room:state', getPublicRoomState(room));
 		}
 
 		io.to(joinedRoomCode).emit('draft:state', getDraftPublicState(room));
@@ -398,7 +424,14 @@ io.on('connection', (socket) => {
 		if (!room) return callback?.({ ok: false, error: 'ROOM_NOT_FOUND' });
 		if (room.hostId !== socket.id) return callback?.({ ok: false, error: 'NOT_HOST' });
 		if (!room.draft?.voting) return callback?.({ ok: false, error: 'NOT_IN_VOTING' });
+		try {
+			const { personalTotals, teamTotals } = computeScoresFromRoom(room);
+			room.results = { personalTotals, teamTotals };
+		} catch (e) {
+			room.results = { personalTotals: {}, teamTotals: {} };
+		}
 		room.draft.phase = 'results';
+		io.to(joinedRoomCode).emit('room:state', getPublicRoomState(room));
 		io.to(joinedRoomCode).emit('draft:state', getDraftPublicState(room));
 		callback?.({ ok: true });
 	});

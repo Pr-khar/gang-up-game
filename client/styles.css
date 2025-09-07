@@ -29,4 +29,15 @@ ul { padding-left: 20px; }
   input, button { font-size: 18px; padding: 10px 14px; }
 }
 
+/* Results / Leaderboards */
+.section { margin-top: 16px; }
+.section h2 { margin: 12px 0; font-size: 18px; }
+table.leaderboard { width: 100%; border-collapse: separate; border-spacing: 0; }
+table.leaderboard thead th { text-align: left; font-size: 14px; color: #374151; padding: 8px 10px; border-bottom: 1px solid #e5e7eb; }
+table.leaderboard tbody td { padding: 10px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+table.leaderboard tbody tr.winner { background: #fff7ed; }
+table.leaderboard tbody tr.winner td { font-weight: 600; }
+table.leaderboard td.rank { width: 72px; font-variant-numeric: tabular-nums; color: #6b7280; }
+table.leaderboard td.total { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+
 

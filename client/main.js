@@ -1,6 +1,7 @@
 import { renderLobby } from './screens/lobby.js';
 import { renderDraft } from './screens/draft.js';
 import { renderVoting } from './screens/voting.js';
+import { renderGangReveal } from './screens/gangReveal.js';
 import { renderResults } from './screens/results.js';
 import { socket, onRoomState, onDraftState } from './socket.js';
 
@@ -67,9 +68,12 @@ function showScreen(screen) {
   elements.auth.classList.add('hidden');
   elements.lobby.classList.add('hidden');
   elements.draft.classList.add('hidden');
+  const revealEl = document.getElementById('gangReveal');
+  if (revealEl) revealEl.classList.add('hidden');
   elements.voting.classList.add('hidden');
   if (elements.results) elements.results.classList.add('hidden');
   if (screen === 'draft') elements.draft.classList.remove('hidden');
+  else if (screen === 'reveal' && revealEl) revealEl.classList.remove('hidden');
   else if (screen === 'voting') elements.voting.classList.remove('hidden');
   else if (screen === 'results' && elements.results) elements.results.classList.remove('hidden');
 }
@@ -77,6 +81,7 @@ function showScreen(screen) {
 function computePhase(room) {
   const p = room?.draft?.phase;
   if (p === 'draft') return 'draft';
+  if (p === 'reveal') return 'reveal';
   if (p === 'voting') return 'voting';
   if (p === 'results') return 'results';
   return 'lobby';
@@ -94,8 +99,29 @@ function render() {
       return renderDraft({ state, elements, socket, selfId, myTeammates, mySic, setMyTeammates, setMySic, showScreen, playerNameById });
     case 'voting':
       return renderVoting({ state, elements, socket, selfId, showScreen, playerNameById });
+    case 'reveal': {
+      const revealElements = {
+        ...elements,
+        gangReveal: document.getElementById('gangReveal'),
+        revealHostControls: document.getElementById('revealHostControls'),
+        startVoting: document.getElementById('startVoting'),
+        waitingMsgReveal: document.getElementById('waitingMsgReveal'),
+        myGangSummary: document.getElementById('myGangSummary'),
+        rolesList: document.getElementById('rolesList')
+      };
+      try {
+        console.log('[REVEAL] room:', state.room);
+        console.log('[REVEAL] draft public state:', state.room?.draft);
+        console.log('[REVEAL] players:', state.room?.players);
+        console.log('[REVEAL] selfId:', selfId);
+        return renderGangReveal({ state, elements: revealElements, socket, selfId, showScreen, playerNameById });
+      } catch (err) {
+        console.error('[REVEAL] render error', err);
+      }
+      return;
+    }
     case 'results':
-      return renderResults({ state, elements, showScreen, playerNameById });
+      return renderResults({ state, elements, socket, selfId, showScreen, playerNameById });
     case 'lobby':
     default:
       return renderLobby({ state, elements, socket, selfId, showScreen });
