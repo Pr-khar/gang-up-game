@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gang Up - Lobby</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="card">
+      <h1>Gang Up Lobby</h1>
+
+      <div id="auth">
+        <div class="row">
+          <input id="name" placeholder="Your name" />
+          <button id="create">Create Room</button>
+        </div>
+        <div class="row">
+          <input id="roomCode" placeholder="6-digit code" maxlength="6" />
+          <button id="join" class="secondary">Join Room</button>
+        </div>
+        <p class="muted">Enter a name, then create a room or join an existing one.</p>
+      </div>
+
+      <div id="lobby" class="hidden">
+        <p>Room Code: <span id="code" class="code"></span></p>
+        <p class="muted">Share this code to invite others.</p>
+        <div class="row" style="width: 100%">
+          <div id="modeInfo" class="status">Mode: <span id="modeActive">Standard</span> — Rounds: <span id="roundsActive">0</span></div>
+        </div>
+        <div class="row hidden" id="rrWarning" style="width:100%">
+          <div class="muted">Warning: Full Round Robin will create more than 28 rounds. Consider a smaller group or another mode.</div>
+        </div>
+        <div class="row hidden" id="hostModeControls" style="gap: 8px">
+          <label for="gameModeSelect" class="muted">Game Mode</label>
+          <select id="gameModeSelect">
+            <option value="standard">Standard (2x per player)</option>
+            <option value="extended">Extended (4x per player)</option>
+            <option value="round_robin">Full Round Robin</option>
+          </select>
+        </div>
+        <h3>Players</h3>
+        <ul id="players"></ul>
+        <div class="row">
+          <button id="startDraft" class="hidden">Start Draft</button>
+          <button id="leave" class="secondary">Leave Room</button>
+        </div>
+      </div>
+
+      <div id="draft" class="hidden">
+        <div class="section-title">
+          <span class="pill">Draft Phase</span>
+          <div class="row hidden" id="draftHostControls" style="gap: 8px">
+            <button id="endDraft" class="secondary">End Draft Phase</button>
+            <button id="backToLobby" class="secondary">Back to Lobby</button>
+          </div>
+        </div>
+        <div class="row" style="width: 100%">
+          <div id="myPicks" class="muted">My Team: - | My 2IC: -</div>
+        </div>
+        <div class="row" style="width: 100%">
+          <div id="waitingMsg" class="status">Waiting for host to continue...</div>
+        </div>
+        <div class="grid" id="playerGrid"></div>
+        <div class="row" style="width: 100%">
+          <div class="tap-help">Tap to add teammate (max 2). Long-press or right-click to set 2IC (max 1).</div>
+        </div>
+        <h3>Selections</h3>
+        <ul id="progress"></ul>
+      </div>
+
+      <div id="voting" class="hidden">
+        <div class="section-title">
+          <span class="pill">Voting</span>
+          <div class="row hidden" id="votingHostControls" style="gap: 8px">
+            <button id="nextMatchup" class="secondary">Next Matchup</button>
+            <button id="backToLobbyVoting" class="secondary">Back to Lobby</button>
+          </div>
+        </div>
+        <div class="row" style="width: 100%">
+          <div id="votingInfo" class="muted">Round 1</div>
+        </div>
+        <div class="row" style="width: 100%">
+          <div id="matchup" class="matchup">TBD vs TBD</div>
+        </div>
+        <div class="row" style="gap: 8px; width: 100%">
+          <button id="voteA">Vote A</button>
+          <button id="voteB">Vote B</button>
+        </div>
+        <div class="row" style="width: 100%">
+          <input id="because" placeholder="Because... (optional)" style="flex: 1; min-width: 200px" />
+        </div>
+        <div class="row" style="width: 100%">
+          <div id="voteStatus" class="status">Waiting for others to vote…</div>
+        </div>
+        <div class="row" style="width: 100%">
+          <div id="voteTally" class="muted"></div>
+        </div>
+        <div class="row" style="width: 100%">
+          <div id="waitingMsgVoting" class="status">Waiting for host to continue...</div>
+        </div>
+      </div>
+      
+      <div id="results" class="hidden">
+        <div class="section-title">
+          <span class="pill">Results</span>
+        </div>
+        <div class="row" style="width: 100%">
+          <div id="resultsSummary" class="muted">Results will appear here.</div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="./main.js"></script>
+  </body>
+  </html>
+
+
